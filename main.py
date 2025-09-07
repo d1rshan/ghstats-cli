@@ -1,20 +1,19 @@
+#!/usr/bin/env python3
 import os
 import sys
-import requests
-from rich.console import Console
-from rich.table import Table
-from rich import box
-from dotenv import load_dotenv
 import argparse
+import requests
+from datetime import datetime
+from dotenv import load_dotenv
+from rich.console import Console
 
 API_URL = "https://api.github.com/graphql"
-
 load_dotenv()
 TOKEN = os.getenv("GITHUB_TOKEN")
 
 def fetch_contributions(username: str):
     if not TOKEN:
-        print("❌ Please set GITHUB_TOKEN env var with your GitHub personal access token")
+        print("❌ GITHUB_TOKEN not found. Put it in a .env or export it as env var.")
         sys.exit(1)
 
     query = """
@@ -33,52 +32,68 @@ def fetch_contributions(username: str):
       }
     }
     """
-
     headers = {"Authorization": f"Bearer {TOKEN}"}
-    response = requests.post(API_URL, json={"query": query, "variables": {"login": username}}, headers=headers)
-
-    if response.status_code != 200:
-        print("❌ Error fetching data:", response.text)
+    resp = requests.post(API_URL, json={"query": query, "variables": {"login": username}}, headers=headers)
+    if resp.status_code != 200:
+        print("❌ HTTP error:", resp.status_code, resp.text)
+        sys.exit(1)
+    data = resp.json()
+    if data.get("errors"):
+        print("❌ GitHub API error:", data["errors"])
         sys.exit(1)
 
-    weeks = response.json()["data"]["user"]["contributionsCollection"]["contributionCalendar"]["weeks"]
-
-    grid = []
+    weeks = data["data"]["user"]["contributionsCollection"]["contributionCalendar"]["weeks"]
+    grid = [[] for _ in range(7)]
     for week in weeks:
         for i, day in enumerate(week["contributionDays"]):
-            if len(grid) <= i:
-                grid.append([])
             grid[i].append(day["contributionCount"])
-    return grid  
+    return grid, weeks
 
-
-from rich.console import Console
-from rich.table import Table
-from rich import box
-
-def print_heatmap(grid):
+def print_heatmap(grid, weeks):
     console = Console()
-    table = Table(show_header=False, show_lines=False, box=box.MINIMAL, padding=(0, 0))
-
     colors = ["#ebedf0", "#9be9a8", "#40c463", "#30a14e", "#216e39"]
 
-    for row in grid:
-        table.add_row(*[
-            f"[{colors[min(4, count // 5)]}]■[/]" if count > 0 else "[#ebedf0]■[/]"
-            for count in row
-        ])
+    month_labels = []
+    last_month = None
+    for week in weeks:
+        first_day = week["contributionDays"][0]["date"]
+        month = datetime.fromisoformat(first_day).strftime("%b")
+        if month != last_month:
+            month_labels.append(month)
+            last_month = month
+        else:
+            month_labels.append("")
 
-    console.print(table)
+    month_row = "   " + " ".join([m.center(2) if m else "  " for m in month_labels])
+    console.print(month_row)
 
+    first_week_days = weeks[0]["contributionDays"]
+    weekday_labels = [datetime.fromisoformat(d["date"]).strftime("%a") for d in first_week_days]
+
+    for label, row in zip(weekday_labels, grid):
+        cells = []
+        for count in row:
+            if count == 0:
+                idx = 0
+            elif count < 5:
+                idx = 1
+            elif count < 10:
+                idx = 2
+            elif count < 20:
+                idx = 3
+            else:
+                idx = 4
+            color = colors[idx]
+            cells.append(f"[{color}]■[/]")
+        console.print(f"{label} " + " ".join(cells))
 
 def main():
-    parser = argparse.ArgumentParser(description="GitHub Contributions Heatmap in Terminal")
-    parser.add_argument("--user", required=True, help="GitHub username")
+    parser = argparse.ArgumentParser(description="GitHub contributions heatmap (terminal)")
+    parser.add_argument("--user", "-u", required=True, help="GitHub username")
     args = parser.parse_args()
 
-    grid = fetch_contributions(args.user)
-    print_heatmap(grid)
-
+    grid, weeks = fetch_contributions(args.user)
+    print_heatmap(grid, weeks)
 
 if __name__ == "__main__":
     main()
