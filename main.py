@@ -4,10 +4,12 @@ import requests
 from rich.console import Console
 from rich.table import Table
 from rich import box
+from dotenv import load_dotenv
 import argparse
 
 API_URL = "https://api.github.com/graphql"
 
+load_dotenv()
 TOKEN = os.getenv("GITHUB_TOKEN")
 
 def fetch_contributions(username: str):
