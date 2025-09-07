@@ -115,6 +115,8 @@ def display_heatmap(username: str, weeks: list, stats: dict):
     month_labels = Text(" " * 4) 
     last_month = None
     for i, week in enumerate(weeks):
+        if not week["contributionDays"]:
+            continue
         first_day_date = datetime.fromisoformat(week["contributionDays"][0]["date"])
         month = first_day_date.strftime("%b")
         if last_month != month:
@@ -124,24 +126,33 @@ def display_heatmap(username: str, weeks: list, stats: dict):
                  month_labels.append(f"{month}")
             last_month = month
             
-    grid = Table.grid(expand=False)
-    grid.add_column(style="bold")  
-    for _ in range(len(weeks)):
-        grid.add_column()
+    layout_table = Table.grid(expand=False, padding=0)
+    layout_table.add_column(style="bold", justify="right")  
+    layout_table.add_column()  
 
+    labels_table = Table.grid(expand=False)
     day_labels = ["", "Mon", "", "Wed", "", "Fri", ""]
-    
+    for label in day_labels:
+        labels_table.add_row(f"{label} ")
+
+    heatmap_table = Table.grid(expand=False)
+    for _ in range(len(weeks)):
+        heatmap_table.add_column()
+
     grid_data = [[] for _ in range(7)]
     for week in weeks:
-        for i, day in enumerate(week["contributionDays"]):
-            grid_data[i].append(day["contributionCount"])
+        days_in_week = {day['weekday']: day['contributionCount'] for day in week['contributionDays']}
+        for i in range(7):
+            grid_data[i].append(days_in_week.get(i, 0))
 
-    for i, label in enumerate(day_labels):
-        row_cells = [f"{label} "]
+    for i in range(7):  
+        row_cells = []
         for count in grid_data[i]:
             color = get_color_for_count(count)
-            row_cells.append(Text("■ ", style=color)) 
-        grid.add_row(*row_cells)
+            row_cells.append(Text("■ ", style=color))
+        heatmap_table.add_row(*row_cells)
+
+    layout_table.add_row(labels_table, Align.left(heatmap_table, style="on #0d1117"))
 
     legend = Text("Less ", style="white")
     for color in COLORS:
@@ -152,7 +163,7 @@ def display_heatmap(username: str, weeks: list, stats: dict):
         Align.center(stats_text),
         "", 
         month_labels,
-        Align.center(grid, style="on #000000"),
+        layout_table,  
         "", 
         Align.center(legend),
     )
@@ -163,7 +174,6 @@ def display_heatmap(username: str, weeks: list, stats: dict):
         border_style="blue",
         padding=(1, 2)
     ))
-
 def main():
     parser = argparse.ArgumentParser(description="View a GitHub contributions heatmap in your terminal.")
     parser.add_argument("username", help="GitHub username to fetch the heatmap for.")
