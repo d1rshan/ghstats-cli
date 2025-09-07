@@ -117,19 +117,31 @@ def display_heatmap(username: str, weeks: list, stats: dict):
         f"Current Streak: [bold green]{stats['current_streak']} days[/bold green] ✨"
     )
 
-    month_labels = Text(" " * 4)
+
+    cell_width = len(SYMBOL) + 1
+    total_heatmap_width = len(weeks) * cell_width
+
+    label_canvas = [' '] * total_heatmap_width
     last_month = None
+
     for i, week in enumerate(weeks):
         if not week["contributionDays"]:
             continue
-        first_day_date = datetime.fromisoformat(week["contributionDays"][0]["date"])
-        month = first_day_date.strftime("%b")
-        if last_month != month:
-            if i > 1:
-                month_labels.append(f"{month: <10}")  
-            else:
-                month_labels.append(f"{month}")
-            last_month = month
+        
+        first_day_of_week = datetime.fromisoformat(week["contributionDays"][0]["date"])
+        month_of_first_day = first_day_of_week.strftime("%b")
+
+        if month_of_first_day != last_month:
+            start_pos = i * cell_width
+            month_str = month_of_first_day
+            
+            for j in range(len(month_str)):
+                if start_pos + j < len(label_canvas):
+                    label_canvas[start_pos + j] = month_str[j]
+            
+            last_month = month_of_first_day
+
+    month_labels = Text(" " * 4) + Text("".join(label_canvas))
 
     labels_table = Table.grid(expand=False)
     day_labels = ["", "Mon", "", "Wed", "", "Fri", ""]
