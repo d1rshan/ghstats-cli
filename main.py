@@ -51,7 +51,7 @@ def fetch_contributions(username: str):
 
 def print_heatmap(grid, weeks):
     console = Console()
-    colors = ["#151B23", "#9be9a8", "#40c463", "#30a14e", "#216e39"]
+    colors = ["#151B23", "#196C2E", "#2EA043", "#56D364", "#45F059"]
 
     month_labels = []
     last_month = None
