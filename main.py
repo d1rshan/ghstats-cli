@@ -20,6 +20,10 @@ TOKEN = os.getenv("GITHUB_TOKEN")
 # COLORS = ["#1F1F1F", "#057A2E", "#30C563", "#56E879", "#8BFFAD"] # LOW CONTRAST
 COLORS = ["#444444", "#10A34A", "#30C563", "#56E879", "#8BFFAD"] # HIGH CONTRAST
 
+# SYMBOL = "⬤"
+SYMBOL = "■"
+
+
 def fetch_contributions(username: str):
     if not TOKEN:
         print("❌ [bold red]Error:[/bold red] GITHUB_TOKEN not found.")
@@ -113,7 +117,6 @@ def display_heatmap(username: str, weeks: list, stats: dict):
         f"Current Streak: [bold green]{stats['current_streak']} days[/bold green] ✨"
     )
 
-    # Month labels
     month_labels = Text(" " * 4)
     last_month = None
     for i, week in enumerate(weeks):
@@ -147,7 +150,7 @@ def display_heatmap(username: str, weeks: list, stats: dict):
         row_cells = []
         for count in grid_data[i]:
             color = get_color_for_count(count)
-            row_cells.append(Text("■", style=color))
+            row_cells.append(Text(SYMBOL, style=color))
         heatmap_table.add_row(*row_cells)
 
     heatmap_with_bg = Padding(heatmap_table, (0, 1), style="on #000000")
@@ -159,7 +162,7 @@ def display_heatmap(username: str, weeks: list, stats: dict):
 
     legend = Text("Less ", style="white")
     for color in COLORS:
-        legend.append("■ ", style=color)
+        legend.append(SYMBOL + " ", style=color)
     legend.append("More", style="white")
 
     content_group = Group(
