@@ -51,7 +51,7 @@ def fetch_contributions(username: str):
 
 def print_heatmap(grid, weeks):
     console = Console()
-    colors = ["#ebedf0", "#9be9a8", "#40c463", "#30a14e", "#216e39"]
+    colors = ["#151B23", "#9be9a8", "#40c463", "#30a14e", "#216e39"]
 
     month_labels = []
     last_month = None
@@ -86,6 +86,8 @@ def print_heatmap(grid, weeks):
             color = colors[idx]
             cells.append(f"[{color}]■[/]")
         console.print(f"{label} " + " ".join(cells))
+    legend = "Less " + " ".join(f"[{c}]■[/]" for c in colors) + " More"
+    console.print("\n" + legend)
 
 def main():
     parser = argparse.ArgumentParser(description="GitHub contributions heatmap (terminal)")
