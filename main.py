@@ -52,14 +52,21 @@ def fetch_contributions(username: str):
     return grid  
 
 
+from rich.console import Console
+from rich.table import Table
+from rich import box
+
 def print_heatmap(grid):
     console = Console()
-    table = Table(show_header=False, show_lines=False, box=box.SIMPLE, padding=(0,1))
+    table = Table(show_header=False, show_lines=False, box=box.MINIMAL, padding=(0, 0))
 
-    shades = ["  ", "░░", "▒▒", "▓▓", "██"]
+    colors = ["#ebedf0", "#9be9a8", "#40c463", "#30a14e", "#216e39"]
 
     for row in grid:
-        table.add_row(*[shades[min(len(shades)-1, (count // 5))] for count in row])
+        table.add_row(*[
+            f"[{colors[min(4, count // 5)]}]■[/]" if count > 0 else "[#ebedf0]■[/]"
+            for count in row
+        ])
 
     console.print(table)
 
