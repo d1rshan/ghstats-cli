@@ -17,11 +17,19 @@ load_dotenv()
 TOKEN = os.getenv("GITHUB_TOKEN")
 
 # COLORS = ["#151B23", "#033A16", "#196C2E", "#2EA043", "#56D364"] # GITHUB's
-# COLORS = ["#1F1F1F", "#057A2E", "#30C563", "#56E879", "#8BFFAD"] # LOW CONTRAST
-COLORS = ["#444444", "#10A34A", "#30C563", "#56E879", "#8BFFAD"] # HIGH CONTRAST
+COLORS = ["#151B23", "#057A2E", "#30C563", "#56E879", "#8BFFAD"] # LOW CONTRAST
 
-# SYMBOL = "⬤"
 SYMBOL = "■"
+# SYMBOL = "⬤"
+# SYMBOL = "◍"
+# SYMBOL = "▮"
+# SYMBOL = "◉"
+# SYMBOL = "◆"
+# SYMBOL = "▬"
+# SYMBOL = "◘"
+# SYMBOL = "▼"
+# SYMBOL = "◩"
+# SYMBOL = "◯"
 
 
 def fetch_contributions(username: str):
@@ -108,13 +116,13 @@ def calculate_stats(weeks: list):
 
 
 def display_heatmap(username: str, weeks: list, stats: dict):
-    console = Console()
+    console = Console(force_terminal=True, color_system="truecolor")
 
     title = f"GitHub Contributions for [bold cyan]{username}[/bold cyan]"
     stats_text = (
         f"[bold]{stats['total']:,}[/bold] contributions in the last year\n"
-        f"Longest Streak: [bold green]{stats['longest_streak']} days[/bold green] 🔥\n"
-        f"Current Streak: [bold green]{stats['current_streak']} days[/bold green] ✨"
+        f"Longest Streak: [bold green]{stats['longest_streak']} days[/bold green] 🗿\n"
+        f"Current Streak: [bold green]{stats['current_streak']} days[/bold green] 🔥"
     )
 
 
@@ -200,7 +208,7 @@ def main():
     parser.add_argument("username", help="GitHub username to fetch the heatmap for.")
     args = parser.parse_args()
 
-    console = Console()
+    console = Console(force_terminal=True, color_system="truecolor")
     with console.status(f"[bold green]Fetching data for {args.username}...[/]"):
         weeks_data = fetch_contributions(args.username)
         stats = calculate_stats(weeks_data)
