@@ -7,6 +7,7 @@ from datetime import datetime, timedelta, timezone
 from dotenv import load_dotenv
 from rich.console import Console, Group
 from rich.panel import Panel
+from rich.padding import Padding
 from rich.table import Table
 from rich.text import Text
 from rich.align import Align
@@ -104,15 +105,16 @@ def calculate_stats(weeks: list):
 
 def display_heatmap(username: str, weeks: list, stats: dict):
     console = Console()
-    
+
     title = f"GitHub Contributions for [bold cyan]{username}[/bold cyan]"
     stats_text = (
         f"[bold]{stats['total']:,}[/bold] contributions in the last year\n"
         f"Longest Streak: [bold green]{stats['longest_streak']} days[/bold green] 🔥\n"
         f"Current Streak: [bold green]{stats['current_streak']} days[/bold green] ✨"
     )
-    
-    month_labels = Text(" " * 4) 
+
+    # Month labels
+    month_labels = Text(" " * 4)
     last_month = None
     for i, week in enumerate(weeks):
         if not week["contributionDays"]:
@@ -120,22 +122,18 @@ def display_heatmap(username: str, weeks: list, stats: dict):
         first_day_date = datetime.fromisoformat(week["contributionDays"][0]["date"])
         month = first_day_date.strftime("%b")
         if last_month != month:
-            if i > 1: 
-                month_labels.append(f"{month: <10}") 
+            if i > 1:
+                month_labels.append(f"{month: <10}")  
             else:
-                 month_labels.append(f"{month}")
+                month_labels.append(f"{month}")
             last_month = month
-            
-    layout_table = Table.grid(expand=False, padding=0)
-    layout_table.add_column(style="bold", justify="right")  
-    layout_table.add_column()  
 
     labels_table = Table.grid(expand=False)
     day_labels = ["", "Mon", "", "Wed", "", "Fri", ""]
     for label in day_labels:
         labels_table.add_row(f"{label} ")
 
-    heatmap_table = Table.grid(expand=False)
+    heatmap_table = Table.grid(expand=False, padding=(0, 1)) 
     for _ in range(len(weeks)):
         heatmap_table.add_column()
 
@@ -145,14 +143,19 @@ def display_heatmap(username: str, weeks: list, stats: dict):
         for i in range(7):
             grid_data[i].append(days_in_week.get(i, 0))
 
-    for i in range(7):  
+    for i in range(7):
         row_cells = []
         for count in grid_data[i]:
             color = get_color_for_count(count)
-            row_cells.append(Text("■ ", style=color))
+            row_cells.append(Text("■", style=color))
         heatmap_table.add_row(*row_cells)
 
-    layout_table.add_row(labels_table, Align.left(heatmap_table, style="on #0d1117"))
+    heatmap_with_bg = Padding(heatmap_table, (0, 1), style="on #000000")
+
+    layout_table = Table.grid(expand=False, padding=0)
+    layout_table.add_column(style="bold", justify="right")  
+    layout_table.add_column()  
+    layout_table.add_row(labels_table, Align.center(heatmap_with_bg))
 
     legend = Text("Less ", style="white")
     for color in COLORS:
@@ -167,13 +170,16 @@ def display_heatmap(username: str, weeks: list, stats: dict):
         "", 
         Align.center(legend),
     )
-    
-    console.print(Panel(
-        Align.center(content_group),
-        title=title,
-        border_style="blue",
-        padding=(1, 2)
-    ))
+
+    console.print(
+        Panel(
+            Align.center(content_group),
+            title=title,
+            border_style="blue",
+            padding=(1, 2),
+        )
+    )
+
 def main():
     parser = argparse.ArgumentParser(description="View a GitHub contributions heatmap in your terminal.")
     parser.add_argument("username", help="GitHub username to fetch the heatmap for.")
