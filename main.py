@@ -15,10 +15,11 @@ API_URL = "https://api.github.com/graphql"
 load_dotenv()
 TOKEN = os.getenv("GITHUB_TOKEN")
 
-COLORS = ["#161b22", "#0e4429", "#006d32", "#26a641", "#39d353"]
+# COLORS = ["#151B23", "#033A16", "#196C2E", "#2EA043", "#56D364"] # GITHUB's
+# COLORS = ["#1F1F1F", "#057A2E", "#30C563", "#56E879", "#8BFFAD"] # LOW CONTRAST
+COLORS = ["#444444", "#10A34A", "#30C563", "#56E879", "#8BFFAD"] # HIGH CONTRAST
 
 def fetch_contributions(username: str):
-    """Fetches contribution data from the GitHub GraphQL API."""
     if not TOKEN:
         print("❌ [bold red]Error:[/bold red] GITHUB_TOKEN not found.")
         print("Please create a .env file with GITHUB_TOKEN or export it as an environment variable.")
@@ -57,7 +58,6 @@ def fetch_contributions(username: str):
     return data["data"]["user"]["contributionsCollection"]["contributionCalendar"]["weeks"]
 
 def get_color_for_count(count: int) -> str:
-    """Determines the color for a given contribution count."""
     if count == 0:
         return COLORS[0]
     elif count < 5:
@@ -70,7 +70,6 @@ def get_color_for_count(count: int) -> str:
         return COLORS[4]
 
 def calculate_stats(weeks: list):
-    """Calculates total contributions, streaks, and busiest day."""
     all_days = [day for week in weeks for day in week["contributionDays"]]
     total_contributions = sum(day["contributionCount"] for day in all_days)
 
@@ -104,7 +103,6 @@ def calculate_stats(weeks: list):
 
 
 def display_heatmap(username: str, weeks: list, stats: dict):
-    """Renders the heatmap and stats using rich."""
     console = Console()
     
     title = f"GitHub Contributions for [bold cyan]{username}[/bold cyan]"
@@ -154,7 +152,7 @@ def display_heatmap(username: str, weeks: list, stats: dict):
         Align.center(stats_text),
         "", 
         month_labels,
-        grid,
+        Align.center(grid, style="on #000000"),
         "", 
         Align.center(legend),
     )
