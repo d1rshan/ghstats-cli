@@ -3,17 +3,25 @@ import os
 import sys
 import argparse
 import requests
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 from dotenv import load_dotenv
-from rich.console import Console
+from rich.console import Console, Group
+from rich.panel import Panel
+from rich.table import Table
+from rich.text import Text
+from rich.align import Align
 
 API_URL = "https://api.github.com/graphql"
 load_dotenv()
 TOKEN = os.getenv("GITHUB_TOKEN")
 
+COLORS = ["#161b22", "#0e4429", "#006d32", "#26a641", "#39d353"]
+
 def fetch_contributions(username: str):
+    """Fetches contribution data from the GitHub GraphQL API."""
     if not TOKEN:
-        print("❌ GITHUB_TOKEN not found. Put it in a .env or export it as env var.")
+        print("❌ [bold red]Error:[/bold red] GITHUB_TOKEN not found.")
+        print("Please create a .env file with GITHUB_TOKEN or export it as an environment variable.")
         sys.exit(1)
 
     query = """
@@ -25,6 +33,7 @@ def fetch_contributions(username: str):
               contributionDays {
                 date
                 contributionCount
+                weekday
               }
             }
           }
@@ -33,69 +42,141 @@ def fetch_contributions(username: str):
     }
     """
     headers = {"Authorization": f"Bearer {TOKEN}"}
-    resp = requests.post(API_URL, json={"query": query, "variables": {"login": username}}, headers=headers)
-    if resp.status_code != 200:
-        print("❌ HTTP error:", resp.status_code, resp.text)
-        sys.exit(1)
-    data = resp.json()
-    if data.get("errors"):
-        print("❌ GitHub API error:", data["errors"])
+    try:
+        response = requests.post(API_URL, json={"query": query, "variables": {"login": username}}, headers=headers)
+        response.raise_for_status()
+    except requests.exceptions.RequestException as e:
+        print(f"❌ [bold red]HTTP Error:[/bold red] {e}")
         sys.exit(1)
 
-    weeks = data["data"]["user"]["contributionsCollection"]["contributionCalendar"]["weeks"]
-    grid = [[] for _ in range(7)]
+    data = response.json()
+    if "errors" in data:
+        print(f"❌ [bold red]GitHub API Error:[/bold red] {data['errors'][0]['message']}")
+        sys.exit(1)
+
+    return data["data"]["user"]["contributionsCollection"]["contributionCalendar"]["weeks"]
+
+def get_color_for_count(count: int) -> str:
+    """Determines the color for a given contribution count."""
+    if count == 0:
+        return COLORS[0]
+    elif count < 5:
+        return COLORS[1]
+    elif count < 10:
+        return COLORS[2]
+    elif count < 20:
+        return COLORS[3]
+    else:
+        return COLORS[4]
+
+def calculate_stats(weeks: list):
+    """Calculates total contributions, streaks, and busiest day."""
+    all_days = [day for week in weeks for day in week["contributionDays"]]
+    total_contributions = sum(day["contributionCount"] for day in all_days)
+
+    longest_streak = 0
+    current_streak = 0
+    is_active_today = False
+
+    if all_days:
+        last_day_date = datetime.fromisoformat(all_days[-1]['date']).date()
+        
+        today = datetime.now(timezone.utc).date()
+        
+        if last_day_date >= today - timedelta(days=1) and all_days[-1]["contributionCount"] > 0:
+            is_active_today = True
+
+    for day in all_days:
+        if day["contributionCount"] > 0:
+            current_streak += 1
+        else:
+            longest_streak = max(longest_streak, current_streak)
+            current_streak = 0
+    longest_streak = max(longest_streak, current_streak)
+
+    active_streak = current_streak if is_active_today else 0
+
+    return {
+        "total": total_contributions,
+        "longest_streak": longest_streak,
+        "current_streak": active_streak,
+    }
+
+
+def display_heatmap(username: str, weeks: list, stats: dict):
+    """Renders the heatmap and stats using rich."""
+    console = Console()
+    
+    title = f"GitHub Contributions for [bold cyan]{username}[/bold cyan]"
+    stats_text = (
+        f"[bold]{stats['total']:,}[/bold] contributions in the last year\n"
+        f"Longest Streak: [bold green]{stats['longest_streak']} days[/bold green] 🔥\n"
+        f"Current Streak: [bold green]{stats['current_streak']} days[/bold green] ✨"
+    )
+    
+    month_labels = Text(" " * 4) 
+    last_month = None
+    for i, week in enumerate(weeks):
+        first_day_date = datetime.fromisoformat(week["contributionDays"][0]["date"])
+        month = first_day_date.strftime("%b")
+        if last_month != month:
+            if i > 1: 
+                month_labels.append(f"{month: <10}") 
+            else:
+                 month_labels.append(f"{month}")
+            last_month = month
+            
+    grid = Table.grid(expand=False)
+    grid.add_column(style="bold")  
+    for _ in range(len(weeks)):
+        grid.add_column()
+
+    day_labels = ["", "Mon", "", "Wed", "", "Fri", ""]
+    
+    grid_data = [[] for _ in range(7)]
     for week in weeks:
         for i, day in enumerate(week["contributionDays"]):
-            grid[i].append(day["contributionCount"])
-    return grid, weeks
+            grid_data[i].append(day["contributionCount"])
 
-def print_heatmap(grid, weeks):
-    console = Console()
-    colors = ["#151B23", "#196C2E", "#2EA043", "#56D364", "#45F059"]
+    for i, label in enumerate(day_labels):
+        row_cells = [f"{label} "]
+        for count in grid_data[i]:
+            color = get_color_for_count(count)
+            row_cells.append(Text("■ ", style=color)) 
+        grid.add_row(*row_cells)
 
-    month_labels = []
-    last_month = None
-    for week in weeks:
-        first_day = week["contributionDays"][0]["date"]
-        month = datetime.fromisoformat(first_day).strftime("%b")
-        if month != last_month:
-            month_labels.append(month)
-            last_month = month
-        else:
-            month_labels.append("")
+    legend = Text("Less ", style="white")
+    for color in COLORS:
+        legend.append("■ ", style=color)
+    legend.append("More", style="white")
 
-    month_row = "   " + " ".join([m.center(2) if m else "  " for m in month_labels])
-    console.print(month_row)
-
-    first_week_days = weeks[0]["contributionDays"]
-    weekday_labels = [datetime.fromisoformat(d["date"]).strftime("%a") for d in first_week_days]
-
-    for label, row in zip(weekday_labels, grid):
-        cells = []
-        for count in row:
-            if count == 0:
-                idx = 0
-            elif count < 5:
-                idx = 1
-            elif count < 10:
-                idx = 2
-            elif count < 20:
-                idx = 3
-            else:
-                idx = 4
-            color = colors[idx]
-            cells.append(f"[{color}]■[/]")
-        console.print(f"{label} " + " ".join(cells))
-    legend = "Less " + " ".join(f"[{c}]■[/]" for c in colors) + " More"
-    console.print("\n" + legend)
+    content_group = Group(
+        Align.center(stats_text),
+        "", 
+        month_labels,
+        grid,
+        "", 
+        Align.center(legend),
+    )
+    
+    console.print(Panel(
+        Align.center(content_group),
+        title=title,
+        border_style="blue",
+        padding=(1, 2)
+    ))
 
 def main():
-    parser = argparse.ArgumentParser(description="GitHub contributions heatmap (terminal)")
-    parser.add_argument("--user", "-u", required=True, help="GitHub username")
+    parser = argparse.ArgumentParser(description="View a GitHub contributions heatmap in your terminal.")
+    parser.add_argument("username", help="GitHub username to fetch the heatmap for.")
     args = parser.parse_args()
 
-    grid, weeks = fetch_contributions(args.user)
-    print_heatmap(grid, weeks)
+    console = Console()
+    with console.status(f"[bold green]Fetching data for {args.username}...[/]"):
+        weeks_data = fetch_contributions(args.username)
+        stats = calculate_stats(weeks_data)
+    
+    display_heatmap(args.username, weeks_data, stats)
 
 if __name__ == "__main__":
     main()
