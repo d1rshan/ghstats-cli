@@ -17,10 +17,10 @@ load_dotenv()
 TOKEN = os.getenv("GITHUB_TOKEN")
 
 # COLORS = ["#151B23", "#033A16", "#196C2E", "#2EA043", "#56D364"] # GITHUB's
-COLORS = ["#151B23", "#057A2E", "#30C563", "#56E879", "#8BFFAD"] # LOW CONTRAST
+COLORS = ["#151B23", "#057A2E", "#30C563", "#56E879", "#8BFFAD"] # CUSTOM
 
-SYMBOL = "■"
-# SYMBOL = "⬤"
+# SYMBOL = "■"
+SYMBOL = "⬤"
 # SYMBOL = "◍"
 # SYMBOL = "▮"
 # SYMBOL = "◉"
