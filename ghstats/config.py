@@ -10,7 +10,7 @@ DEFAULT = {
     "username": "",
     "token": "",
     "colors": ["#151B23", "#057A2E", "#30C563", "#56E879", "#8BFFAD"],
-    "symbol": "⬤"
+    "symbol": "■"
 }
 
 
