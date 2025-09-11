@@ -1,0 +1,19 @@
+[project]
+name = "ghstats"
+version = "0.1.0"
+description = "View GitHub contribution heatmap in the terminal"
+readme = "README.md"
+requires-python = ">=3.8"
+dependencies = [
+  "click",
+  "requests",
+  "rich",
+  "python-dotenv"
+]
+
+[project.scripts]
+ghstats = "ghstats.cli:main"
+
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"

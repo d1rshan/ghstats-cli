@@ -1,1 +1,5 @@
 .env*
+
+ghstats/__pycache__
+
+ghstats.egg-info/
