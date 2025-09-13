@@ -1,9 +1,27 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
 [project]
 name = "ghstats"
 version = "0.1.0"
+authors = [
+  { name="Darshan Paccha", email="darshan.paccha@gmail.com" },
+]
 description = "View GitHub contribution heatmap in the terminal"
 readme = "README.md"
+license = { file = "LICENSE" }
 requires-python = ">=3.8"
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Environment :: Console",
+    "Intended Audience :: Developers",
+    "Topic :: Terminals",
+    "Topic :: Utilities",
+]
 dependencies = [
   "click",
   "requests",
@@ -11,9 +29,10 @@ dependencies = [
   "python-dotenv"
 ]
 
-[project.scripts]
-ghstats = "ghstats.cli:main"
+[project.urls]
+Homepage = "https://github.com/d1rshan/ghstats"
+Repository = "https://github.com/d1rshan/ghstats"
+"Bug Tracker" = "https://github.com/d1rshan/ghstats/issues"
 
-[build-system]
-requires = ["setuptools>=61.0", "wheel"]
-build-backend = "setuptools.build_meta"
+[project.scripts]
+ghstats = "ghstats_cli.cli:main"
