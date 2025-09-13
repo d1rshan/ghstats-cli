@@ -8,7 +8,10 @@ version = "0.1.0"
 authors = [
   { name="Darshan Paccha", email="darshan.paccha@gmail.com" },
 ]
-description = "View GitHub contribution heatmap in the terminal"
+maintainers = [
+  { name="d1rshan", email="darshan.paccha@gmail.com" },
+]
+description = "A CLI to display your GitHub contributions heatmap, streaks, and activity over the past year."
 readme = "README.md"
 license = { file = "LICENSE" }
 requires-python = ">=3.8"
@@ -30,9 +33,10 @@ dependencies = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/d1rshan/ghstats"
-Repository = "https://github.com/d1rshan/ghstats"
-"Bug Tracker" = "https://github.com/d1rshan/ghstats/issues"
+Homepage = "https://github.com/d1rshan/ghstats-cli"
+Repository = "https://github.com/d1rshan/ghstats-cli"
+"Bug Tracker" = "https://github.com/d1rshan/ghstats-cli/issues"
+"Maintainer (GitHub)" = "https://github.com/d1rshan"
 
 [project.scripts]
 ghstats = "ghstats_cli.cli:main"

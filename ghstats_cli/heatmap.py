@@ -135,14 +135,10 @@ def calculate_stats(weeks: list) -> dict:
         else:
             current_streak = 0
 
-    days_count = len(all_days)
-    avg_daily = total_contributions / days_count if days_count > 0 else 0.0
-
     return {
         "total": total_contributions,
         "longest_streak": longest_streak,
         "current_streak": current_streak,
-        "avg_daily": avg_daily
     }
 
 
@@ -154,7 +150,6 @@ def display_heatmap(username: str, weeks: list, stats: dict, colors: list[str], 
     
     stats_text = (
         f"[bold]{stats['total']:,}[/bold] contributions in the last year\n"
-        f"Daily Average: [bold yellow]{stats['avg_daily']:.1f}[/bold yellow] contributions/day\n"
         f"Longest Streak: [bold green]{stats['longest_streak']} days[/bold green] 🗿\n"
         f"Current Streak: [bold green]{stats['current_streak']} days[/bold green] 🔥"
     )
