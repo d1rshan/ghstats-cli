@@ -1,3 +1,5 @@
 ghstats_cli/__pycache__
 
-ghstats.egg-info/
+ghstats_cli.egg-info/
+
+dist/
