@@ -8,9 +8,6 @@ version = "0.1.0"
 authors = [
   { name="Darshan Paccha", email="darshan.paccha@gmail.com" },
 ]
-maintainers = [
-  { name="d1rshan", email="darshan.paccha@gmail.com" },
-]
 description = "A CLI to display your GitHub contributions heatmap, streaks, and activity over the past year."
 readme = "README.md"
 license = "MIT"
@@ -34,9 +31,8 @@ keywords = ["GitHub", "CLI", "contributions", "streaks", "heatmap"]
 
 [project.urls]
 Homepage = "https://github.com/d1rshan/ghstats-cli"
-Repository = "https://github.com/d1rshan/ghstats-cli"
 "Bug Tracker" = "https://github.com/d1rshan/ghstats-cli/issues"
-"Maintainer (GitHub)" = "https://github.com/d1rshan"
+"Maintainer" = "https://github.com/d1rshan"
 
 [project.scripts]
 ghstats = "ghstats_cli.cli:main"
