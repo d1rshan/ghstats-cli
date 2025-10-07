@@ -1,4 +1,6 @@
-# ghstats-cli 
+![Alt text](./image.png)
+
+# GHSTATS-CLI
 
 A simple command-line tool to display your GitHub contribution heatmap right in your terminal.
 
@@ -26,7 +28,7 @@ You can also use standard `pip`. It's recommended to install it in a virtual env
 
 ```bash
 pip install ghstats-cli
-````
+```
 
 ## Getting Started
 
