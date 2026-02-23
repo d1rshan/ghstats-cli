@@ -1,4 +1,4 @@
-![Alt text](./image.png)
+![Alt text](./ghstats.png)
 
 # GHSTATS-CLI
 
