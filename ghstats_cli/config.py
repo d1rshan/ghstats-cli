@@ -79,7 +79,7 @@ def get_effective_config():
         "token": cfg.get("token", "").strip(),
         "colors": cfg.get("colors", DEFAULT["colors"]),
         "symbol": cfg.get("symbol", DEFAULT["symbol"]),
-        "background": cfg.get("background")
+        "background": cfg.get("background", DEFAULT["background"])
     }
 
 
