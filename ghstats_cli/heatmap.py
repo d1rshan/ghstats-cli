@@ -14,7 +14,7 @@ def fetch_contributions(username: str, token: str):
     """Fetch contribution data from GitHub GraphQL API."""
     if not token:
         raise RuntimeError("GitHub token not provided.")
-    
+
     if not username:
         raise RuntimeError("Username not provided.")
 
@@ -40,24 +40,28 @@ def fetch_contributions(username: str, token: str):
         "Authorization": f"Bearer {token}",
         "Content-Type": "application/json"
     }
-    
+
     try:
         resp = requests.post(
-            API_URL, 
-            json={"query": query, "variables": {"login": username}}, 
+            API_URL,
+            json={"query": query, "variables": {"login": username}},
             headers=headers,
-            timeout=30  
+            timeout=30
         )
         resp.raise_for_status()
     except requests.exceptions.Timeout:
-        raise RuntimeError("Request timed out. Please check your internet connection.")
+        raise RuntimeError(
+            "Request timed out. Please check your internet connection.")
     except requests.exceptions.ConnectionError:
-        raise RuntimeError("Connection error. Please check your internet connection.")
+        raise RuntimeError(
+            "Connection error. Please check your internet connection.")
     except requests.exceptions.HTTPError as e:
         if resp.status_code == 401:
-            raise RuntimeError("Invalid GitHub token. Please check your token and try again.")
+            raise RuntimeError(
+                "Invalid GitHub token. Please check your token and try again.")
         elif resp.status_code == 403:
-            raise RuntimeError("GitHub API rate limit exceeded or insufficient permissions.")
+            raise RuntimeError(
+                "GitHub API rate limit exceeded or insufficient permissions.")
         else:
             raise RuntimeError(f"HTTP Error {resp.status_code}: {e}")
     except requests.exceptions.RequestException as e:
@@ -77,7 +81,8 @@ def fetch_contributions(username: str, token: str):
 
     user_data = data.get("data", {}).get("user")
     if not user_data:
-        raise RuntimeError(f"User '{username}' not found or no permission to view contributions.")
+        raise RuntimeError(
+            f"User '{username}' not found or no permission to view contributions.")
 
     try:
         weeks = user_data["contributionsCollection"]["contributionCalendar"]["weeks"]
@@ -89,20 +94,21 @@ def fetch_contributions(username: str, token: str):
 def get_color_for_count(count: int, colors: list[str]) -> str:
     """Map contribution count to appropriate color."""
     if count == 0:
-        return colors[0]  
+        return colors[0]
     elif count < 5:
         return colors[1]
     elif count < 10:
-        return colors[2]  
+        return colors[2]
     elif count < 20:
-        return colors[3]  
+        return colors[3]
     else:
-        return colors[4] 
+        return colors[4]
 
 
 def calculate_stats(weeks: list) -> dict:
     """Calculate contribution statistics from weekly data."""
-    all_days = [day for week in weeks for day in week.get("contributionDays", [])]
+    all_days = [day for week in weeks for day in week.get(
+        "contributionDays", [])]
     if not all_days:
         return {"total": 0, "longest_streak": 0, "current_streak": 0, "avg_daily": 0.0}
 
@@ -121,10 +127,10 @@ def calculate_stats(weeks: list) -> dict:
             temp_streak = 0
 
     today = datetime.now(timezone.utc).date()
-    
+
     if all_days:
         last_day_date = datetime.fromisoformat(all_days[-1]["date"]).date()
-        
+
         if last_day_date >= today - timedelta(days=2):
             for day in reversed(all_days):
                 day_date = datetime.fromisoformat(day["date"]).date()
@@ -142,17 +148,18 @@ def calculate_stats(weeks: list) -> dict:
     }
 
 
-def display_heatmap(username: str, weeks: list, stats: dict, colors: list[str], symbol: str):
+def display_heatmap(username: str, weeks: list, stats: dict, colors: list[str], symbol: str, background: str):
     """Display the contribution heatmap with statistics."""
     console = Console(force_terminal=True, color_system="truecolor")
-    
+
     title = f"GitHub Contributions for [bold cyan]{username}[/bold cyan]"
-    
+
     stats_text = (
         f"[bold]{stats['total']:,}[/bold] contributions in the last year\n"
-        f"Longest Streak: [bold green]{stats['longest_streak']} days[/bold green] 🗿\n"
-        f"Current Streak: [bold green]{stats['current_streak']} days[/bold green] 🔥"
-    )
+        f"Longest Streak: [bold green]{
+            stats['longest_streak']} days[/bold green] 🗿\n"
+        f"Current Streak: [bold green]{
+            stats['current_streak']} days[/bold green] 🔥")
 
     cell_width = len(symbol) + 1
     total_heatmap_width = len(weeks) * cell_width
@@ -163,10 +170,11 @@ def display_heatmap(username: str, weeks: list, stats: dict, colors: list[str], 
     for i, week in enumerate(weeks):
         if not week.get("contributionDays"):
             continue
-        
-        first_day_of_week = datetime.fromisoformat(week["contributionDays"][0]["date"])
+
+        first_day_of_week = datetime.fromisoformat(
+            week["contributionDays"][0]["date"])
         month_of_first_day = first_day_of_week.strftime("%b")
-        
+
         if month_of_first_day != last_month:
             start_pos = i * cell_width
             month_str = month_of_first_day
@@ -188,7 +196,8 @@ def display_heatmap(username: str, weeks: list, stats: dict, colors: list[str], 
 
     grid_data = [[] for _ in range(7)]
     for week in weeks:
-        days_in_week = {day['weekday']: day['contributionCount'] for day in week.get('contributionDays', [])}
+        days_in_week = {day['weekday']: day['contributionCount']
+                        for day in week.get('contributionDays', [])}
         for day_idx in range(7):
             grid_data[day_idx].append(days_in_week.get(day_idx, 0))
 
@@ -199,7 +208,11 @@ def display_heatmap(username: str, weeks: list, stats: dict, colors: list[str], 
             row_cells.append(Text(symbol, style=color))
         heatmap_table.add_row(*row_cells)
 
-    heatmap_with_bg = Padding(heatmap_table, (0, 1), style="on #000000")
+    if not background:
+        style = ""
+    else:
+        style = f"on {background}"
+    heatmap_with_bg = Padding(heatmap_table, (0, 1), style=style)
 
     layout_table = Table.grid(expand=False, padding=0)
     layout_table.add_column(style="bold", justify="right")
